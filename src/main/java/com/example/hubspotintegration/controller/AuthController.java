@@ -14,12 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 @RestController
 @RequestMapping("/auth")
-public class HubspotAuthController {
+public class AuthController {
 
     @Value("${hubspot.client.id}")
     private String clientId;
