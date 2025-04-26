@@ -1,5 +1,10 @@
 package com.example.hubspotintegration.controller;
 
+import com.example.hubspotintegration.service.OAuthTokenService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +23,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequestMapping("/auth")
 public class AuthController {
 
+    private final OAuthTokenService oAuthTokenService;
+
     @Value("${hubspot.client.id}")
     private String clientId;
 
@@ -29,6 +36,10 @@ public class AuthController {
 
     @Value("${hubspot.scopes}")
     private String scopes;
+
+    public AuthController(OAuthTokenService oAuthTokenService) {
+        this.oAuthTokenService = oAuthTokenService;
+    }
 
     @GetMapping("/url")
     public ResponseEntity<String> getAuthorizationUrl() {
@@ -45,7 +56,7 @@ public class AuthController {
     }
 
     @GetMapping("/callback")
-    public ResponseEntity<String> handleCallback(@RequestParam("code") String code) {
+    public ResponseEntity<String> handleCallback(@RequestParam("code") String code) throws JsonProcessingException {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -65,6 +76,15 @@ public class AuthController {
                 request,
                 String.class
         );
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(response.getBody());
+
+        String accessToken = jsonNode.get("access_token").asText();
+        String refreshToken = jsonNode.get("refresh_token").asText();
+        Long expiresIn = jsonNode.get("expires_in").asLong();
+
+        this.oAuthTokenService.saveToken(accessToken, refreshToken, expiresIn);
 
         return ResponseEntity.ok(response.getBody());
     }
