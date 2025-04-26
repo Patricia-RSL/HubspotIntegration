@@ -3,6 +3,9 @@ package com.example.hubspotintegration.service;
 import com.example.hubspotintegration.dto.OAuthTokenDTO;
 import com.example.hubspotintegration.entity.OAuthToken;
 import com.example.hubspotintegration.repository.OAuthTokenRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.jasypt.encryption.StringEncryptor;
 import org.springframework.stereotype.Service;
@@ -36,4 +39,14 @@ public class OAuthTokenService {
         return new OAuthTokenDTO(at, rt, t.getExpiresAt());
     }
 
+    public void createTokenByJson(String jsonStr) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(jsonStr);
+
+        String accessToken = jsonNode.get("access_token").asText();
+        String refreshToken = jsonNode.get("refresh_token").asText();
+        Long expiresIn = jsonNode.get("expires_in").asLong();
+
+        this.saveToken(accessToken, refreshToken, expiresIn);
+    }
 }

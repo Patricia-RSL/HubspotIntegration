@@ -1,28 +1,22 @@
-package com.example.hubspotintegration.controller;
+package com.example.hubspotintegration.service;
 
-import com.example.hubspotintegration.service.OAuthTokenService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@RestController
-@RequestMapping("/auth")
-public class AuthController {
+@Service
+public class HubSpotAuthService {
 
+    @Autowired
     private final OAuthTokenService oAuthTokenService;
 
     @Value("${hubspot.client.id}")
@@ -37,13 +31,12 @@ public class AuthController {
     @Value("${hubspot.scopes}")
     private String scopes;
 
-    public AuthController(OAuthTokenService oAuthTokenService) {
+    public HubSpotAuthService(OAuthTokenService oAuthTokenService) {
         this.oAuthTokenService = oAuthTokenService;
     }
 
-    @GetMapping("/url")
-    public ResponseEntity<String> getAuthorizationUrl() {
-        String authUrl = UriComponentsBuilder
+    public String generateUrl() {
+        return UriComponentsBuilder
                 .fromHttpUrl("https://app.hubspot.com/oauth/authorize")
                 .queryParam("client_id",    clientId)
                 .queryParam("scope",        scopes)
@@ -51,12 +44,9 @@ public class AuthController {
                 .queryParam("state",        "STATE")
                 .encode()
                 .toUriString();
-
-        return ResponseEntity.ok(authUrl);
     }
 
-    @GetMapping("/callback")
-    public ResponseEntity<String> handleCallback(@RequestParam("code") String code) throws JsonProcessingException {
+    public String handleCallback(String code) throws JsonProcessingException {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -77,15 +67,7 @@ public class AuthController {
                 String.class
         );
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(response.getBody());
-
-        String accessToken = jsonNode.get("access_token").asText();
-        String refreshToken = jsonNode.get("refresh_token").asText();
-        Long expiresIn = jsonNode.get("expires_in").asLong();
-
-        this.oAuthTokenService.saveToken(accessToken, refreshToken, expiresIn);
-
-        return ResponseEntity.ok(response.getBody());
+        this.oAuthTokenService.createTokenByJson(response.getBody());
+        return response.getBody();
     }
 }
