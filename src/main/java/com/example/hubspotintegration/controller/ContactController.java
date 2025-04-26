@@ -1,11 +1,25 @@
 package com.example.hubspotintegration.controller;
 
-import org.springframework.stereotype.Controller;
+import com.example.hubspotintegration.service.ContactService;
+import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Controller
-@RestController("contact")
+@RestController
+@RequestMapping("/contact")
+@AllArgsConstructor
 public class ContactController {
+
+    private final ContactService contactService;
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAll(){
+        this.contactService.findAll();
+        return ResponseEntity.ok().build();
+    }
     /*@PostMapping("/contacts")
     public ResponseEntity<String> createContact(@RequestBody ContactRequest contactRequest) {
         RestTemplate restTemplate = new RestTemplate();
