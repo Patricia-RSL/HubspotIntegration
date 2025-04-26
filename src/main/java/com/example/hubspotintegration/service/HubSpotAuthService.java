@@ -1,7 +1,6 @@
 package com.example.hubspotintegration.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -16,7 +15,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 public class HubSpotAuthService {
 
-    @Autowired
     private final OAuthTokenService oAuthTokenService;
 
     @Value("${hubspot.client.id}")
