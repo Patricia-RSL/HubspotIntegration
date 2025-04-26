@@ -34,10 +34,6 @@ public class OAuthTokenService {
                 .findTopByOrderByCreatedAtDesc()
                 .orElseThrow(() -> new IllegalStateException("No valid access token available to add to the request header"));
 
-        if (token.getExpiresAt().isBefore(Instant.now())) {
-            throw new IllegalStateException("The access token has expired. Please refresh the token.");
-        }
-
         String accessToken = encryptor.decrypt(token.getAccessToken());
         String refreshToken = encryptor.decrypt(token.getRefreshToken());
 

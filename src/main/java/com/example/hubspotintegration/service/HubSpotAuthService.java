@@ -1,8 +1,8 @@
 package com.example.hubspotintegration.service;
 
+import com.example.hubspotintegration.integration.HubSpotApiClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +16,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class HubSpotAuthService {
 
     private final OAuthTokenService oAuthTokenService;
+    private final HubSpotApiClient hubSpotApiClient;
 
     @Value("${hubspot.client.id}")
     private String clientId;
@@ -29,8 +30,9 @@ public class HubSpotAuthService {
     @Value("${hubspot.scopes}")
     private String scopes;
 
-    public HubSpotAuthService(OAuthTokenService oAuthTokenService) {
+    public HubSpotAuthService(OAuthTokenService oAuthTokenService, HubSpotApiClient hubSpotApiClient) {
         this.oAuthTokenService = oAuthTokenService;
+        this.hubSpotApiClient = hubSpotApiClient;
     }
 
     public String generateUrl() {
@@ -44,8 +46,7 @@ public class HubSpotAuthService {
                 .toUriString();
     }
 
-    public String handleCallback(String code) throws JsonProcessingException {
-        RestTemplate restTemplate = new RestTemplate();
+    public void handleCallback(String code) throws JsonProcessingException {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -57,15 +58,23 @@ public class HubSpotAuthService {
         body.add("redirect_uri", redirectUri);
         body.add("code", code);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://api.hubapi.com/oauth/v1/token",
-                request,
-                String.class
-        );
+        String response = hubSpotApiClient.getToken(body);
+        this.oAuthTokenService.createTokenByJson(response);
+    }
 
-        this.oAuthTokenService.createTokenByJson(response.getBody());
-        return response.getBody();
+    public void refreshToken(String refreshToken) throws JsonProcessingException {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "refresh_token");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("refresh_token", refreshToken);
+
+        String response = hubSpotApiClient.refreshToken(body);
+        this.oAuthTokenService.createTokenByJson(response);
     }
 }
