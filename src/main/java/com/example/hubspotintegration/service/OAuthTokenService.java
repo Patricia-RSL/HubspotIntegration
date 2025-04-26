@@ -30,13 +30,18 @@ public class OAuthTokenService {
     }
 
     public OAuthTokenDTO getLatestToken() {
-        OAuthToken t = tokenRepository
+        OAuthToken token = tokenRepository
                 .findTopByOrderByCreatedAtDesc()
-                .orElseThrow(() -> new RuntimeException("Nenhum token encontrado"));
+                .orElseThrow(() -> new IllegalStateException("No valid access token available to add to the request header"));
 
-        String at = encryptor.decrypt(t.getAccessToken());
-        String rt = encryptor.decrypt(t.getRefreshToken());
-        return new OAuthTokenDTO(at, rt, t.getExpiresAt());
+        if (token.getExpiresAt().isBefore(Instant.now())) {
+            throw new IllegalStateException("The access token has expired. Please refresh the token.");
+        }
+
+        String accessToken = encryptor.decrypt(token.getAccessToken());
+        String refreshToken = encryptor.decrypt(token.getRefreshToken());
+
+        return new OAuthTokenDTO(accessToken, refreshToken, token.getExpiresAt());
     }
 
     public void createTokenByJson(String jsonStr) throws JsonProcessingException {

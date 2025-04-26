@@ -1,12 +1,16 @@
 package com.example.hubspotintegration.controller;
 
+import com.example.hubspotintegration.dto.ContactRequestDTO;
 import com.example.hubspotintegration.service.ContactService;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/contact")
@@ -15,35 +19,40 @@ public class ContactController {
 
     private final ContactService contactService;
 
-    @GetMapping("/all")
-    public ResponseEntity<?> getAll(){
-        this.contactService.findAll();
-        return ResponseEntity.ok().build();
+    @GetMapping
+    public ResponseEntity<JsonNode> getAll() {
+        try {
+            JsonNode response = this.contactService.findAll();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return handleError(e);
+        }
     }
-    /*@PostMapping("/contacts")
-    public ResponseEntity<String> createContact(@RequestBody ContactRequest contactRequest) {
-        RestTemplate restTemplate = new RestTemplate();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken); // Recupere o token de acesso armazenado
-        headers.setContentType(MediaType.APPLICATION_JSON);
+    @PostMapping
+    public ResponseEntity<JsonNode> createContact(@RequestBody ContactRequestDTO contactRequestDTO) {
+        try {
+            JsonNode response = this.contactService.createContact(
+                    contactRequestDTO.getEmail(),
+                    contactRequestDTO.getFirstName(),
+                    contactRequestDTO.getLastName()
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return handleError(e);
+        }
+    }
 
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("email", contactRequest.getEmail());
-        properties.put("firstname", contactRequest.getFirstName());
-        properties.put("lastname", contactRequest.getLastName());
+    private ResponseEntity<JsonNode> handleError(Exception e) {
+        JsonNode errorResponse = convertToErrorResponse(e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
 
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("properties", properties);
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://api.hubapi.com/crm/v3/objects/contacts",
-                request,
-                String.class
-        );
-
-        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
-    }*/
+    private JsonNode convertToErrorResponse(String message) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode errorNode = objectMapper.createObjectNode();
+        errorNode.put("status", "error");
+        errorNode.put("message", message);
+        return errorNode;
+    }
 }
