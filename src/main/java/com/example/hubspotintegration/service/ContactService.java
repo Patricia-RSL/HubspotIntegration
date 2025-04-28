@@ -1,10 +1,12 @@
 package com.example.hubspotintegration.service;
 
+import com.example.hubspotintegration.dto.HubSpotWebhookEvent;
 import com.example.hubspotintegration.integration.HubSpotContactClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -14,6 +16,7 @@ import java.util.Map;
  */
 @Service
 @AllArgsConstructor
+@Slf4j
 public class ContactService {
 
     private final HubSpotContactClient hubSpotContactClient;
@@ -37,5 +40,13 @@ public class ContactService {
         ObjectMapper objectMapper = new ObjectMapper();
 
         return objectMapper.readTree(response);
+    }
+
+    public void processContactCreation(HubSpotWebhookEvent event) {
+        if (event == null) {
+            log.warn("Webhook inválido : {}", event);
+            return;
+        }
+        log.info("Processando evento de criação de contato: {}", event);
     }
 }
