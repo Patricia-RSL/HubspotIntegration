@@ -13,13 +13,13 @@ import java.time.Instant;
 
 @Component
 @AllArgsConstructor
-public class FeignAuthInterceptor implements RequestInterceptor {
+public class HubSpotFeignInterceptor implements RequestInterceptor {
     private final OAuthTokenService oAuthTokenService;
     private final HubSpotAuthService hubSpotAuthService;
 
     @Override
     public void apply(RequestTemplate requestTemplate) {
-        if (!requestTemplate.url().startsWith("/oauth")) {
+        if (!requestTemplate.url().contains("/oauth")) {
             OAuthTokenDTO accessToken = oAuthTokenService.getLatestToken();
             if (accessToken == null) {
                 throw new IllegalStateException("No valid access token available to add to the request header");
