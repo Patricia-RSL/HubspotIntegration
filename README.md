@@ -1,7 +1,7 @@
 # HubSpot Integration Project
 
 Este projeto é uma aplicação Spring Boot para integração com a API do HubSpot, incluindo processamento de webhooks e gerenciamento de contatos.  
-Uma documentação técnica detalhada está disponível [aqui](documentacaotecnica.md).
+Uma breve documentação técnica (explicando as decisões tomadas, motivação para uso de libs e possíveis melhorias futuras) está disponível [aqui](documentacaotecnica.md).
 
 ## Pré-requisitos
 
