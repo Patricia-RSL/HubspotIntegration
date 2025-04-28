@@ -3,14 +3,13 @@ package com.example.hubspotintegration.controller;
 import com.example.hubspotintegration.dto.ContactRequestDTO;
 import com.example.hubspotintegration.service.ContactService;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
+import javax.validation.Valid;
 
 /**
  * Controller for managing HubSpot contacts.
@@ -25,37 +24,21 @@ public class ContactController {
     @GetMapping
     public ResponseEntity<JsonNode> getAll() {
         try {
-            JsonNode response = this.contactService.findAll();
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return handleError(e);
+            return ResponseEntity.ok(contactService.findAll());
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to fetch contacts", ex);
         }
     }
 
     @PostMapping
-    public ResponseEntity<JsonNode> createContact(@RequestBody ContactRequestDTO contactRequestDTO) {
-        try {
-            JsonNode response = this.contactService.createContact(
-                    contactRequestDTO.getEmail(),
-                    contactRequestDTO.getFirstName(),
-                    contactRequestDTO.getLastName()
-            );
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return handleError(e);
-        }
+    public ResponseEntity<JsonNode> createContact(@RequestBody @Valid ContactRequestDTO contactRequestDTO) throws JsonProcessingException {
+        JsonNode response = this.contactService.createContact(
+                contactRequestDTO.getEmail(),
+                contactRequestDTO.getFirstName(),
+                contactRequestDTO.getLastName()
+        );
+        return ResponseEntity.ok(response);
     }
 
-    private ResponseEntity<JsonNode> handleError(Exception e) {
-        JsonNode errorResponse = convertToErrorResponse(e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-    }
 
-    private JsonNode convertToErrorResponse(String message) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ObjectNode errorNode = objectMapper.createObjectNode();
-        errorNode.put("status", "error");
-        errorNode.put("message", message);
-        return errorNode;
-    }
 }
