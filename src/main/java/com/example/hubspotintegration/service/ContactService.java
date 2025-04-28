@@ -1,6 +1,6 @@
 package com.example.hubspotintegration.service;
 
-import com.example.hubspotintegration.integration.HubSpotApiClient;
+import com.example.hubspotintegration.integration.HubSpotContactClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,17 +16,17 @@ import java.util.Map;
 @AllArgsConstructor
 public class ContactService {
 
-    private final HubSpotApiClient hubSpotApiClient;
+    private final HubSpotContactClient hubSpotContactClient;
 
     public JsonNode findAll() throws JsonProcessingException {
-        String contacts = hubSpotApiClient.fetchContacts();
+        String contacts = hubSpotContactClient.fetchContacts();
         ObjectMapper objectMapper = new ObjectMapper();
 
         return objectMapper.readTree(contacts);
     }
 
     public JsonNode createContact(String email, String firstName, String lastName) throws JsonProcessingException {
-         String response = hubSpotApiClient.createContact(Map.of(
+         String response = hubSpotContactClient.createContact(Map.of(
                 "properties", Map.of(
                         "email", email,
                         "firstname", firstName,

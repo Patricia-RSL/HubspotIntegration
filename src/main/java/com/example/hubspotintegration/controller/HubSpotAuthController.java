@@ -1,6 +1,7 @@
 package com.example.hubspotintegration.controller;
 
-import com.example.hubspotintegration.service.HubSpotAuthService;
+import com.example.hubspotintegration.service.AuthService;
+import com.example.hubspotintegration.service.OAuthTokenService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.springframework.http.MediaType;
@@ -17,21 +18,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class HubSpotAuthController {
 
-    private final HubSpotAuthService hubSpotAuthService;
+    private final AuthService authService;
+    private final OAuthTokenService oAuthTokenService;
 
-    public HubSpotAuthController(HubSpotAuthService hubSpotAuthService) {
-        this.hubSpotAuthService = hubSpotAuthService;
+    public HubSpotAuthController(AuthService authService, OAuthTokenService oAuthTokenService) {
+        this.authService = authService;
+        this.oAuthTokenService = oAuthTokenService;
     }
 
     @GetMapping("/url")
     public ResponseEntity<String> getAuthorizationUrl() {
-        String authUrl = this.hubSpotAuthService.generateUrl();
+        String authUrl = this.authService.generateUrl();
         return ResponseEntity.ok(authUrl);
     }
 
     @GetMapping("/callback")
     public ResponseEntity<String> handleCallback(@RequestParam("code") String code) throws JsonProcessingException {
-        this.hubSpotAuthService.handleCallback(code);
+        String jsonToken = this.authService.getTokenFromCode(code);
+        if (jsonToken == null) {
+            return ResponseEntity.status(500).body("Failed to obtain token");
+        }
+        this.oAuthTokenService.createTokenByJson(jsonToken);
+
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_HTML)
                 .body("""

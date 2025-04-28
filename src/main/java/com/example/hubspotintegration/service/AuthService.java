@@ -1,22 +1,22 @@
 package com.example.hubspotintegration.service;
 
-import com.example.hubspotintegration.integration.HubSpotApiClient;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.hubspotintegration.integration.HubSpotAuthClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+/**
+ * Service for handling HubSpot OAuth authentication.
+ */
 @Service
-public class HubSpotAuthService {
+public class AuthService {
 
-    private final OAuthTokenService oAuthTokenService;
-    private final HubSpotApiClient hubSpotApiClient;
+    private final HubSpotAuthClient hubSpotAuthClient;
 
     @Value("${hubspot.client.id}")
     private String clientId;
@@ -30,9 +30,8 @@ public class HubSpotAuthService {
     @Value("${hubspot.scopes}")
     private String scopes;
 
-    public HubSpotAuthService(OAuthTokenService oAuthTokenService, HubSpotApiClient hubSpotApiClient) {
-        this.oAuthTokenService = oAuthTokenService;
-        this.hubSpotApiClient = hubSpotApiClient;
+    public AuthService(HubSpotAuthClient hubSpotAuthClient) {
+        this.hubSpotAuthClient = hubSpotAuthClient;
     }
 
     public String generateUrl() {
@@ -46,7 +45,7 @@ public class HubSpotAuthService {
                 .toUriString();
     }
 
-    public void handleCallback(String code) throws JsonProcessingException {
+    public String getTokenFromCode(String code) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -59,11 +58,10 @@ public class HubSpotAuthService {
         body.add("code", code);
 
 
-        String response = hubSpotApiClient.getToken(body);
-        this.oAuthTokenService.createTokenByJson(response);
+        return hubSpotAuthClient.getToken(body);
     }
 
-    public void refreshToken(String refreshToken) throws JsonProcessingException {
+    public String  refreshToken(String refreshToken) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -74,7 +72,6 @@ public class HubSpotAuthService {
         body.add("client_secret", clientSecret);
         body.add("refresh_token", refreshToken);
 
-        String response = hubSpotApiClient.refreshToken(body);
-        this.oAuthTokenService.createTokenByJson(response);
+        return hubSpotAuthClient.refreshToken(body);
     }
 }

@@ -1,12 +1,11 @@
 package com.example.hubspotintegration.component;
 
 import com.example.hubspotintegration.dto.OAuthTokenDTO;
-import com.example.hubspotintegration.service.HubSpotAuthService;
+
 import com.example.hubspotintegration.service.OAuthTokenService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -18,21 +17,19 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class HubSpotFeignInterceptor implements RequestInterceptor {
     private final OAuthTokenService oAuthTokenService;
-    private final HubSpotAuthService hubSpotAuthService;
 
+
+    /**
+     * Applies the OAuth2 Bearer token to the request header.
+     *
+     * @param requestTemplate the request template
+     */
     @Override
     public void apply(RequestTemplate requestTemplate) {
         if (!requestTemplate.url().contains("/oauth")) {
             OAuthTokenDTO accessToken = oAuthTokenService.getLatestToken();
-            if (accessToken == null) {
+            if (accessToken == null || accessToken.accessToken() == null || accessToken.expiresAt().isBefore(Instant.now())) {
                 throw new IllegalStateException("No valid access token available to add to the request header");
-            }
-            if (accessToken.expiresAt().isBefore(Instant.now())) {
-                try {
-                    hubSpotAuthService.refreshToken(accessToken.refreshToken());
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
             }
             requestTemplate.header("Authorization", "Bearer " + accessToken.accessToken());
         }

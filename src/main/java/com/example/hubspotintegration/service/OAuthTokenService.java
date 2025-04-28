@@ -17,9 +17,10 @@ import java.time.Instant;
  */
 @Service
 @AllArgsConstructor
-public class OAuthTokenService {
+public class OAuthTokenService{
 
     private OAuthTokenRepository tokenRepository;
+    private AuthService authService;
     private final StringEncryptor encryptor;
 
     public void saveToken(String accessToken, String refreshToken, Long expiresIn) {
@@ -32,17 +33,6 @@ public class OAuthTokenService {
         tokenRepository.save(token);
     }
 
-    public OAuthTokenDTO getLatestToken() {
-        OAuthToken token = tokenRepository
-                .findTopByOrderByCreatedAtDesc()
-                .orElseThrow(() -> new IllegalStateException("No valid access token available to add to the request header"));
-
-        String accessToken = encryptor.decrypt(token.getAccessToken());
-        String refreshToken = encryptor.decrypt(token.getRefreshToken());
-
-        return new OAuthTokenDTO(accessToken, refreshToken, token.getExpiresAt());
-    }
-
     public void createTokenByJson(String jsonStr) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(jsonStr);
@@ -52,5 +42,33 @@ public class OAuthTokenService {
         Long expiresIn = jsonNode.get("expires_in").asLong();
 
         this.saveToken(accessToken, refreshToken, expiresIn);
+    }
+
+
+    public OAuthTokenDTO getLatestToken() {
+        OAuthToken token = tokenRepository
+                .findTopByOrderByCreatedAtDesc()
+                .orElseThrow(() -> new IllegalStateException("No valid access token available to add to the request header"));
+
+        String accessToken = encryptor.decrypt(token.getAccessToken());
+        String refreshToken = encryptor.decrypt(token.getRefreshToken());
+
+        OAuthTokenDTO tokenDTO = new OAuthTokenDTO(accessToken, refreshToken, token.getExpiresAt());
+
+        return validateAndRefreshToken(tokenDTO);
+    }
+
+
+    private OAuthTokenDTO validateAndRefreshToken(OAuthTokenDTO tokenDTO) {
+        if (tokenDTO.expiresAt().isBefore(Instant.now())) {
+            try {
+                String newToken = authService.refreshToken(tokenDTO.refreshToken());
+                this.createTokenByJson(newToken);
+                return getLatestToken(); // Recarrega o token atualizado
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to refresh token", e);
+            }
+        }
+        return tokenDTO;
     }
 }
