@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
+/**
+ * Service for managing OAuth tokens.
+ */
 @Service
 @AllArgsConstructor
 public class OAuthTokenService {

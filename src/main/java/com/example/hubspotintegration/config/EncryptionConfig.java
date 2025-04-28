@@ -7,6 +7,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuration class for Jasypt encryption.
+ * This class configures the Jasypt StringEncryptor bean used for encrypting and decrypting sensitive data.
+ */
 @Configuration
 public class EncryptionConfig {
 

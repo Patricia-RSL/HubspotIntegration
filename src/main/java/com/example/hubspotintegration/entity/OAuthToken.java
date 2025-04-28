@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.Instant;
 
+/**
+ * Entity representing OAuth tokens.
+ */
 @Entity
 @Data
 @Table(name = "oauth_tokens")

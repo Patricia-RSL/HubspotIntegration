@@ -11,8 +11,11 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
-@Component
-@AllArgsConstructor
+/**
+ * Interceptor for adding OAuth2 Bearer token to the request header.
+ */
+@Component("hubSpotFeignInterceptor")
+@RequiredArgsConstructor
 public class HubSpotFeignInterceptor implements RequestInterceptor {
     private final OAuthTokenService oAuthTokenService;
     private final HubSpotAuthService hubSpotAuthService;
