@@ -12,6 +12,7 @@
 - **PostgreSQL**: Banco de dados para armazenamento de tokens.
 - **RabbitMQ**: Broker de mensagens para processar eventos de webhook de forma assíncrona, melhorando o desempenho e desacoplando componentes.
 - **Jackson**: Adotado para serialização/deserialização de JSON no momento de inserir e consumir webhooks da fila.
+- **Swagger**: Facilita a documentação e testes da API, permitindo visualizar os endpoints disponíveis e suas funcionalidades.
 
 ## Decisões de Design
 - **Arquitetura em Camadas**: A aplicação é dividida em camadas (Controller, Service, Repository) para separar responsabilidades e facilitar a manutenção.

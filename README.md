@@ -1,7 +1,7 @@
 # HubSpot Integration Project
 
 Este projeto é uma aplicação Spring Boot para integração com a API do HubSpot, incluindo processamento de webhooks e gerenciamento de contatos.  
-Uma documentação técnica detalhada está disponível [aqui](documentacaotecnica.md).
+A documentação da API com Swagger pode ser acessada [aqui](http://localhost:8080/swagger-ui/index.html#/), e uma discussão técnica sobre decisões tomadas, motivação para o uso das bibliotecas e possíveis melhorias futuras está disponível [aqui](documentacaotecnica.md).
 
 ## Pré-requisitos
 
@@ -46,7 +46,7 @@ Certifique-se de ter os seguintes itens instalados em sua máquina:
      docker-compose build --no-cache api
      docker-compose up -d
      ```
-      
+   - Esses comandos também podem e devem ser usados após mudanças no código-fonte
 ## Autenticação no HubSpot
 
 Antes de utilizar a API para criar um contato no HubSpot, é necessário obter um token de acesso:
@@ -75,7 +75,7 @@ Com o token de acesso salvo, envie uma requisição `POST` para `/contact/` com 
       }'
    
    ```
-A aplicação incluirá automaticamente o token no cabeçalho da requisição para o HubSpot.
+A aplicação incluirá automaticamente o token no cabeçalho da requisição para o HubSpot. 
 Os contatos criados podem ser verificados diretamente no HubSpot ou listados pelo endpoint /contact/.
 
    ``` bash
