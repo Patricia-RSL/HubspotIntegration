@@ -34,6 +34,8 @@ services:
       retries: 5
     networks:
       - minha-rede
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -51,6 +53,10 @@ services:
       retries: 5
     networks:
       - minha-rede
+
+volumes:
+  postgres_data: 
+    driver: local
 
 networks:
   minha-rede:
