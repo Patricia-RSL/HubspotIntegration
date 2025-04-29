@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 /**
- * Repository interface for managing OAuth tokens.
+ * Repositório para gerenciar tokens OAuth.
  */
 public interface OAuthTokenRepository extends JpaRepository<OAuthToken, Long> {
     Optional<OAuthToken> findTopByOrderByCreatedAtDesc();

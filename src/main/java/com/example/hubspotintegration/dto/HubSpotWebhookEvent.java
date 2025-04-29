@@ -2,6 +2,9 @@ package com.example.hubspotintegration.dto;
 
 import lombok.Data;
 
+/**
+ * DTO para eventos de webhook do HubSpot.
+ */
 @Data
 public class HubSpotWebhookEvent {
     private Long appId;

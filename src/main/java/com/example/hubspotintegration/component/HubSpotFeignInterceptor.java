@@ -1,7 +1,6 @@
 package com.example.hubspotintegration.component;
 
 import com.example.hubspotintegration.dto.OAuthTokenDTO;
-
 import com.example.hubspotintegration.service.OAuthTokenService;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -11,18 +10,20 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 
 /**
- * Interceptor for adding OAuth2 Bearer token to the request header.
+ * Interceptor para adicionar o token de acesso OAuth2 no cabeçalho das requisições.
  */
 @Component("hubSpotFeignInterceptor")
 @RequiredArgsConstructor
 public class HubSpotFeignInterceptor implements RequestInterceptor {
     private final OAuthTokenService oAuthTokenService;
 
-
     /**
-     * Applies the OAuth2 Bearer token to the request header.
-     *
-     * @param requestTemplate the request template
+     * Adiciona o token de acesso OAuth2 no cabeçalho da requisição.
+     * Este método é chamado automaticamente pelo Feign antes de cada requisição.
+     * Ele verifica se o token está válido e o adiciona no formato Bearer.
+     * 
+     * @param requestTemplate Template da requisição que será enviada
+     * @throws IllegalStateException Se não houver token de acesso válido
      */
     @Override
     public void apply(RequestTemplate requestTemplate) {

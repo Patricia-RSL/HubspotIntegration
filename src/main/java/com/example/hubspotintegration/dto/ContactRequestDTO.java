@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.NonNull;
 
 /**
- * Data Transfer Object for creating a contact in HubSpot.
+ * DTO para solicitação de criação de contato no HubSpot.
  */
 @Data
 public class ContactRequestDTO {
