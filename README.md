@@ -1,66 +1,62 @@
 # HubSpot Integration Project
 
 Este projeto é uma aplicação Spring Boot para integração com a API do HubSpot, incluindo processamento de webhooks e gerenciamento de contatos.  
-Uma breve documentação técnica (explicando as decisões tomadas, motivação para uso de libs e possíveis melhorias futuras) está disponível [aqui](documentacaotecnica.md).
+A documentação da API com Swagger pode ser acessada [aqui](http://localhost:8080/swagger-ui/index.html#/), e uma discussão técnica sobre decisões tomadas, motivação para o uso das bibliotecas e possíveis melhorias futuras está disponível [aqui](documentacaotecnica.md).
 
 ## Pré-requisitos
 
 Certifique-se de ter os seguintes itens instalados em sua máquina:
 
-- **Java 17** ou superior
-- **Gradle**
-- **Banco de Dados H2** (configurado no `application.properties`)
+- **Docker Desktop**
 - **Ngrok** (para expor a aplicação local e receber webhooks)
 
 ## Configuração do Projeto
 
-1. **Instale as dependências necessárias**: Java 17, Gradle e Ngrok.
 
-2. **Configure o Ngrok** para redirecionar requisições externas:
-    ```bash
-    ngrok http 8080
+1. **Configure o Ngrok** para redirecionar requisições externas:
+   ```bash
+   ngrok http 8080
     ```
-   - Copie a URL pública gerada (ex.: `https://<subdomínio>.ngrok-free.app`) para configurar o HubSpot.
+   - Copie a URL pública gerada (ex.: `https://<subdomínio>.ngrok-free.app`) para configurar o HubSpot. 
 
-3. **Configure seu aplicativo no HubSpot**:
-   - Adicione a URL do Ngrok com o caminho `/auth/callback` na aba de autenticação:
+2. **Configure seu aplicativo no HubSpot**:
+      - Adicione a URL do Ngrok com o caminho `/auth/callback` na aba de autenticação:
      ```text
      Exemplo: https://<subdomínio>.ngrok-free.app/auth/callback
      ```
    - Adicione os escopos `crm.objects.contacts.read` e `crm.objects.contacts.write`.
    - Após criar o aplicativo, copie o **ID do cliente** e o **Segredo do cliente**.
-
-4. **Configure Webhooks no HubSpot**:
-   - Adicione a URL do Ngrok com o caminho `/webhook/webhook/contact-creation`:
-     ```text
-     Exemplo: https://<subdomínio>.ngrok-free.app/webhook/webhook/contact-creation
-     ```
+3. **Configure Webhooks no HubSpot**:
+   - Adicione a URL do Ngrok com o caminho `/webhook`:
+   ```text
+   Exemplo: https://<subdomínio>.ngrok-free.app/webhook
+   ```
    - Ative a assinatura para eventos de `contact.creation`.
-
-5. **Atualize o arquivo `application.properties`**:
+4. **Atualize o arquivo `application.properties`**:
     ```properties
     jasypt.encryptor.password=<sua-senha>
     hubspot.client.id=<id-do-cliente>
     hubspot.client.secret=<segredo-do-cliente>
     hubspot.redirect.uri=https://<subdomínio>.ngrok-free.app/auth/callback
     ```
-
-6. **Inicie a aplicação** em sua IDE favorita ou com o Gradle:
-    ```bash
-    ./gradlew bootRun
-    ```
-
+5. **Crie e inicie os containers Docker**:
+   - Execute os comandos abaixo para garantir que os containers sejam recriados e iniciados corretamente:
+   ```bash
+     docker-compose down --remove-orphans
+     docker-compose build --no-cache api
+     docker-compose up -d
+     ```
+   - Esses comandos também podem e devem ser usados após mudanças no código-fonte
 ## Autenticação no HubSpot
 
-Antes de criar um contato, é necessário obter o token de acesso:
+Antes de utilizar a API para criar um contato no HubSpot, é necessário obter um token de acesso:
 
 1. Faça uma requisição `GET` para o endpoint `/auth/url`.
-```bash
-curl --location 'http://localhost:8080/auth/url'
-```
+   ```bash
+   curl --location 'http://localhost:8080/auth/url'
+   ```
 2. Acesse a URL retornada e clique em "Permitir acesso"
-3. Se tudo estiver correto, você verá uma mensagem de sucesso como abaixo e o token de acesso será salvo no banco de dados H2 automaticamente
-> **Atenção**: Como o banco H2 é em memória, o token será perdido ao reiniciar a aplicação. Para persistência, utilize um banco como MySQL ou PostgreSQL.
+3. Se tudo estiver correto, você verá uma mensagem de sucesso como abaixo e o token de acesso será salvo no banco PostgreSQL automaticamente
 
 ![img.png](img.png)
 
@@ -69,29 +65,30 @@ curl --location 'http://localhost:8080/auth/url'
 
 Com o token de acesso salvo, envie uma requisição `POST` para `/contact/` com o corpo no formato JSON:
 
-```bash 
-   curl --location 'http://localhost:8080/contact' \
-   --header 'Content-Type: application/json' \
-   --data-raw '{
-   "email": "irvy@lumon.industries",
-   "lastName": "J.",
-   "firstName": "Irvy"
-   }'
-
-```
-A aplicação incluirá automaticamente o token no cabeçalho da requisição para o HubSpot.
+   ```bash 
+      curl --location 'http://localhost:8080/contact' \
+      --header 'Content-Type: application/json' \
+      --data-raw '{
+      "email": "irvy@lumon.industries",
+      "lastName": "J.",
+      "firstName": "Irvy"
+      }'
+   
+   ```
+A aplicação incluirá automaticamente o token no cabeçalho da requisição para o HubSpot. 
 Os contatos criados podem ser verificados diretamente no HubSpot ou listados pelo endpoint /contact/.
 
-``` bash
-curl --location 'http://localhost:8080/contact'
-```
+   ``` bash
+   curl --location 'http://localhost:8080/contact'
+   ```
 
 ## Webhook
 
 Ao receber um webhook de criação de contato, será possível visualizar um log no console da aplicação.Exemplo:
 
-``` bash
-2025-04-28T15:34:46.401-03:00  INFO 46216 --- [HubspotIntegration] [nio-8080-exec-9] c.e.h.c.HubSpotWebhookController         : Recebido evento do webhook: [HubSpotWebhookEvent(appId=123, eventId=100, subscriptionId=3558218, portalId=49704295, occurredAt=1745861475897, subscriptionType=contact.creation, attemptNumber=0, objectId=123, changeSource=CRM, changeFlag=NEW)]
-2025-04-28T15:34:46.402-03:00  INFO 46216 --- [HubspotIntegration] [nio-8080-exec-9] c.e.h.service.ContactService             : Processando evento de criação de contato: HubSpotWebhookEvent(appId=123, eventId=100, subscriptionId=3558218, portalId=49704295, occurredAt=1745861475897, subscriptionType=contact.creation, attemptNumber=0, objectId=123, changeSource=CRM, changeFlag=NEW)
-
-```
+   ``` bash
+   2025-04-29 00:20:48 2025-04-29T03:20:48.737Z  INFO 1 --- [HubspotIntegration] [nio-8080-exec-1] c.e.h.controller.WebhookController       : Evento recebido: HubSpotWebhookEvent(appId=123456, eventId=7890, subscriptionId=12345, portalId=54321, occurredAt=1679876543210, subscriptionType=contact.creation, attemptNumber=1, objectId=987654, changeSource=CRM, changeFlag=new)
+   2025-04-29 00:20:48 2025-04-29T03:20:48.758Z  INFO 1 --- [HubspotIntegration] [nio-8080-exec-1] c.e.h.controller.WebhookController       : Evento enviado para RabbitMQ: HubSpotWebhookEvent(appId=123456, eventId=7890, subscriptionId=12345, portalId=54321, occurredAt=1679876543210, subscriptionType=contact.creation, attemptNumber=1, objectId=987654, changeSource=CRM, changeFlag=new)
+   2025-04-29 00:20:48 2025-04-29T03:20:48.769Z  INFO 1 --- [HubspotIntegration] [ntContainer#0-2] c.e.h.component.RabbitConsumer           : Consumindo evento: HubSpotWebhookEvent(appId=123456, eventId=7890, subscriptionId=12345, portalId=54321, occurredAt=1679876543210, subscriptionType=contact.creation, attemptNumber=1, objectId=987654, changeSource=CRM, changeFlag=new)
+   2025-04-29 00:20:48 2025-04-29T03:20:48.770Z  INFO 1 --- [HubspotIntegration] [ntContainer#0-2] c.e.h.service.ContactService             : Processando evento de criação de contato: HubSpotWebhookEvent(appId=123456, eventId=7890, subscriptionId=12345, portalId=54321, occurredAt=1679876543210, subscriptionType=contact.creation, attemptNumber=1, objectId=987654, changeSource=CRM, changeFlag=new)
+   ```

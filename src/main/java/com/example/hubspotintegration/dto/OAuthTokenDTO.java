@@ -3,7 +3,7 @@ package com.example.hubspotintegration.dto;
 import java.time.Instant;
 
 /**
- * Data Transfer Object for OAuth tokens.
+ * DTO para tokens OAuth.
  */
 public record OAuthTokenDTO(
         String accessToken,

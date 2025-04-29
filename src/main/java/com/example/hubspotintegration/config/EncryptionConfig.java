@@ -8,12 +8,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configuration class for Jasypt encryption.
- * This class configures the Jasypt StringEncryptor bean used for encrypting and decrypting sensitive data.
+ * Classe de configuração para criptografia Jasypt.
+ * Esta classe configura o bean StringEncryptor utilizado para criptografar
+ * e descriptografar dados sensíveis, como tokens de acesso e refresh tokens
+ * do HubSpot.
  */
 @Configuration
 public class EncryptionConfig {
 
+    /**
+     * Senha utilizada para a criptografia.
+     * Esta senha deve ser mantida em segredo e configurada
+     * através da propriedade jasypt.encryptor.password.
+     */
     @Value("${jasypt.encryptor.password}")
     private String password;
 

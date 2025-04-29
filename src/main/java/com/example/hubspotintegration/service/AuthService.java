@@ -11,7 +11,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
- * Service for handling HubSpot OAuth authentication.
+ * Serviço responsável por gerenciar a autenticação OAuth2 com o HubSpot.
+ * Este serviço lida com a geração de URLs de autorização, obtenção de tokens
+ * de acesso e refresh tokens para manter a autenticação ativa.
  */
 @Service
 public class AuthService {
@@ -34,6 +36,13 @@ public class AuthService {
         this.hubSpotAuthClient = hubSpotAuthClient;
     }
 
+    /**
+     * Gera a URL de autorização OAuth2 para iniciar o processo de autenticação com o HubSpot.
+     * Esta URL contém os parâmetros necessários para a autorização, incluindo client_id,
+     * escopos solicitados e URI de redirecionamento.
+     *
+     * @return String contendo a URL completa para autorização
+     */
     public String generateUrl() {
         return UriComponentsBuilder
                 .fromHttpUrl("https://app.hubspot.com/oauth/authorize")
@@ -45,8 +54,15 @@ public class AuthService {
                 .toUriString();
     }
 
+    /**
+     * Obtém o token de acesso do HubSpot utilizando o código de autorização.
+     * Este método é chamado após o usuário autorizar o acesso e o HubSpot
+     * redirecionar para a URI de callback com o código de autorização.
+     *
+     * @param code Código de autorização retornado pelo HubSpot
+     * @return String contendo o token de acesso em formato JSON
+     */
     public String getTokenFromCode(String code) {
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -57,12 +73,18 @@ public class AuthService {
         body.add("redirect_uri", redirectUri);
         body.add("code", code);
 
-
         return hubSpotAuthClient.getToken(body);
     }
 
-    public String  refreshToken(String refreshToken) {
-
+    /**
+     * Atualiza o token de acesso utilizando o refresh token.
+     * Este método é utilizado quando o token de acesso expira e
+     * é necessário obter um novo token sem requerer nova autorização do usuário.
+     *
+     * @param refreshToken Token de atualização obtido durante a autorização inicial
+     * @return String contendo o novo token de acesso em formato JSON
+     */
+    public String refreshToken(String refreshToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 

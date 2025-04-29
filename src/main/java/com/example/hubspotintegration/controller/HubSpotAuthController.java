@@ -3,7 +3,11 @@ package com.example.hubspotintegration.controller;
 import com.example.hubspotintegration.service.AuthService;
 import com.example.hubspotintegration.service.OAuthTokenService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,10 +16,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controller for handling HubSpot OAuth authentication.
+ * Controlador responsável por gerenciar todo o fluxo de autenticação OAuth2 com o HubSpot.
+ * Este controlador lida com a geração de URLs de autorização e o processamento de callbacks
+ * para obtenção de tokens de acesso.
  */
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Autenticação HubSpot", description = "Endpoints para gerenciamento do fluxo de autenticação OAuth2 com o HubSpot")
 public class HubSpotAuthController {
 
     private final AuthService authService;
@@ -26,17 +33,30 @@ public class HubSpotAuthController {
         this.oAuthTokenService = oAuthTokenService;
     }
 
+    @Operation(summary = "Obter URL de autorização", description = "Retorna a URL para iniciar o processo de autorização OAuth com o HubSpot")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "URL de autorização gerada com sucesso"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
     @GetMapping("/url")
     public ResponseEntity<String> getAuthorizationUrl() {
         String authUrl = this.authService.generateUrl();
         return ResponseEntity.ok(authUrl);
     }
 
+    @Operation(summary = "Processar callback de autorização", description = "Processa o código de autorização retornado pelo HubSpot e gera o token de acesso")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Autorização concluída com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Código de autorização inválido"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
     @GetMapping("/callback")
-    public ResponseEntity<String> handleCallback(@RequestParam("code") String code) throws JsonProcessingException {
+    public ResponseEntity<String> handleCallback(
+            @Parameter(description = "Código de autorização retornado pelo HubSpot", required = true)
+            @RequestParam("code") String code) throws JsonProcessingException {
         String jsonToken = this.authService.getTokenFromCode(code);
         if (jsonToken == null) {
-            throw new IllegalArgumentException("Failed to obtain token");
+            throw new IllegalArgumentException("Não foi possível obter o token de acesso.");
         }
         this.oAuthTokenService.createTokenByJson(jsonToken);
 
@@ -74,8 +94,8 @@ public class HubSpotAuthController {
         </head>
         <body>
             <div class="container">
-                <h1>Authorization Successful</h1>
-                <p>You can now use the HubSpot API.</p>
+                <h1>Autorização Concluída</h1>
+                <p>Agora você pode usar a API do HubSpot.</p>
             </div>
         </body>
         </html>

@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.Instant;
 
 /**
- * Entity representing OAuth tokens.
+ * Entidade que representa tokens OAuth.
  */
 @Entity
 @Data
