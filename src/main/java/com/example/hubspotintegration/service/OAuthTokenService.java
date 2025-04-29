@@ -48,7 +48,7 @@ public class OAuthTokenService{
     public OAuthTokenDTO getLatestToken() {
         OAuthToken token = tokenRepository
                 .findTopByOrderByCreatedAtDesc()
-                .orElseThrow(() -> new IllegalStateException("No valid access token available to add to the request header"));
+                .orElseThrow(() -> new IllegalStateException("Nenhum token de acesso ao HubSpot encontrado."));
 
         String accessToken = encryptor.decrypt(token.getAccessToken());
         String refreshToken = encryptor.decrypt(token.getRefreshToken());
@@ -64,9 +64,9 @@ public class OAuthTokenService{
             try {
                 String newToken = authService.refreshToken(tokenDTO.refreshToken());
                 this.createTokenByJson(newToken);
-                return getLatestToken(); // Recarrega o token atualizado
+                return getLatestToken();
             } catch (Exception e) {
-                throw new IllegalStateException("Failed to refresh token", e);
+                throw new IllegalStateException("Falha ao atualizar token de acesso ao HubSpot", e);
             }
         }
         return tokenDTO;

@@ -36,7 +36,7 @@ public class HubSpotAuthController {
     public ResponseEntity<String> handleCallback(@RequestParam("code") String code) throws JsonProcessingException {
         String jsonToken = this.authService.getTokenFromCode(code);
         if (jsonToken == null) {
-            throw new IllegalArgumentException("Failed to obtain token");
+            throw new IllegalArgumentException("Não foi possível obter o token de acesso.");
         }
         this.oAuthTokenService.createTokenByJson(jsonToken);
 

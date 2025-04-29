@@ -22,12 +22,8 @@ public class ContactController {
     private final ContactService contactService;
 
     @GetMapping
-    public ResponseEntity<JsonNode> getAll() {
-        try {
-            return ResponseEntity.ok(contactService.findAll());
-        } catch (Exception ex) {
-            throw new RuntimeException("Failed to fetch contacts", ex);
-        }
+    public ResponseEntity<JsonNode> getAll() throws JsonProcessingException {
+        return ResponseEntity.ok(contactService.findAll());
     }
 
     @PostMapping

@@ -29,7 +29,7 @@ public class HubSpotFeignInterceptor implements RequestInterceptor {
         if (!requestTemplate.url().contains("/oauth")) {
             OAuthTokenDTO accessToken = oAuthTokenService.getLatestToken();
             if (accessToken == null || accessToken.accessToken() == null || accessToken.expiresAt().isBefore(Instant.now())) {
-                throw new IllegalStateException("No valid access token available to add to the request header");
+                throw new IllegalStateException("Não é possível se conectar ao HubSPot. Nenhum token de acesso encontrado ou o token está expirado.");
             }
             requestTemplate.header("Authorization", "Bearer " + accessToken.accessToken());
         }

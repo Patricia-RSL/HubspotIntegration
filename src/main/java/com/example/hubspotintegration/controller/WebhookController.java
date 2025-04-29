@@ -24,13 +24,8 @@ public class WebhookController {
     public ResponseEntity<String> handleWebhook(@RequestBody List<HubSpotWebhookEvent> events) {
         for (HubSpotWebhookEvent event : events) {
             log.info("Evento recebido: " + event);
-            try {
-                rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_NAME, event.getSubscriptionType(), event);
-                log.info("Evento enviado para RabbitMQ: " + event);
-                return ResponseEntity.ok("Evento recebido e enviado para RabbitMQ");
-            } catch (Exception e) {
-                return ResponseEntity.status(500).body("Erro ao receber webhook: " + e.getMessage());
-            }
+            rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_NAME, event.getSubscriptionType(), event);
+            log.info("Evento enviado para RabbitMQ: " + event);
         }
         return ResponseEntity.ok("Eventos processados com sucesso");
     }
