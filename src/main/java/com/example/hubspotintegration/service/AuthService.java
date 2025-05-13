@@ -43,13 +43,13 @@ public class AuthService {
      *
      * @return String contendo a URL completa para autorização
      */
-    public String generateUrl() {
+    public String generateUrl(String state) {
         return UriComponentsBuilder
                 .fromHttpUrl("https://app.hubspot.com/oauth/authorize")
                 .queryParam("client_id",    clientId)
                 .queryParam("scope",        scopes)
                 .queryParam("redirect_uri", redirectUri)
-                .queryParam("state",        "STATE")
+                .queryParam("state",        state)
                 .encode()
                 .toUriString();
     }

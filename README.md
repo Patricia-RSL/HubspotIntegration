@@ -51,22 +51,30 @@ Certifique-se de ter os seguintes itens instalados em sua máquina:
 
 Antes de utilizar a API para criar um contato no HubSpot, é necessário obter um token de acesso:
 
-1. Faça uma requisição `GET` para o endpoint `/auth/url`.
+1. Acesse a seguinte url no seu navegador.
    ```bash
-   curl --location 'http://localhost:8080/auth/url'
+      'https://<subdomínio>.ngrok-free.app/auth/url'
    ```
 2. Acesse a URL retornada e clique em "Permitir acesso"
 3. Se tudo estiver correto, você verá uma mensagem de sucesso como abaixo e o token de acesso será salvo no banco PostgreSQL automaticamente
 
 ![img.png](img.png)
 
+## Observação sobre Sessão e Testes com Postman
+
+> **Importante:** O fluxo de autenticação OAuth2 utiliza sessão HTTP para proteger contra ataques CSRF. O parâmetro `state` é salvo na sessão do usuário e validado no callback. Por isso:
+>
+> - **Sempre realize o fluxo completo de autenticação no mesmo navegador, aba e domínio/porta.**
+> - Se for testar com Postman, é necessário copiar manualmente o cookie `JSESSIONID` da resposta do endpoint `/auth/url` e enviá-lo na requisição para `/auth/callback`. Caso contrário, a sessão será diferente e a autenticação falhará.
+> - Em produção, navegadores gerenciam cookies automaticamente, então esse problema não ocorre para usuários finais.
+> - Se receber erro de "Sessão expirada ou inválida", tente novamente garantindo que o fluxo está sendo feito na mesma sessão.
 
 ## Criando um Contato
 
 Com o token de acesso salvo, envie uma requisição `POST` para `/contact/` com o corpo no formato JSON:
 
    ```bash 
-      curl --location 'http://localhost:8080/contact' \
+      curl --location 'https://<subdomínio>.ngrok-free.app/contact' \
       --header 'Content-Type: application/json' \
       --data-raw '{
       "email": "irvy@lumon.industries",
@@ -79,7 +87,7 @@ A aplicação incluirá automaticamente o token no cabeçalho da requisição pa
 Os contatos criados podem ser verificados diretamente no HubSpot ou listados pelo endpoint /contact/.
 
    ``` bash
-   curl --location 'http://localhost:8080/contact'
+   curl --location 'https://<subdomínio>.ngrok-free.app/contact'
    ```
 
 ## Webhook

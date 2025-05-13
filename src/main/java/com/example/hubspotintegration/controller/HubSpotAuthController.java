@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
+
+import java.security.SecureRandom;
+import java.util.Base64;
 
 /**
  * Controlador responsável por gerenciar todo o fluxo de autenticação OAuth2 com o HubSpot.
@@ -22,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/auth")
+@Slf4j
 @Tag(name = "Autenticação HubSpot", description = "Endpoints para gerenciamento do fluxo de autenticação OAuth2 com o HubSpot")
 public class HubSpotAuthController {
 
@@ -39,8 +45,20 @@ public class HubSpotAuthController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
     @GetMapping("/url")
-    public ResponseEntity<String> getAuthorizationUrl() {
-        String authUrl = this.authService.generateUrl();
+    public ResponseEntity<String> getAuthorizationUrl(HttpSession session) {
+        log.info("session id: {}", session.getId());
+
+        // Gera um state seguro
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] stateBytes = new byte[16];
+        secureRandom.nextBytes(stateBytes);
+        String state = Base64.getUrlEncoder().withoutPadding().encodeToString(stateBytes);
+
+        // Armazena o state na sessão
+        session.setAttribute("oauth2_state", state);
+
+        // Gera a URL com o state
+        String authUrl = this.authService.generateUrl(state);
         return ResponseEntity.ok(authUrl);
     }
 
@@ -53,7 +71,18 @@ public class HubSpotAuthController {
     @GetMapping("/callback")
     public ResponseEntity<String> handleCallback(
             @Parameter(description = "Código de autorização retornado pelo HubSpot", required = true)
-            @RequestParam("code") String code) throws JsonProcessingException {
+            @RequestParam("code") String code,
+            @RequestParam("state") String state,
+            HttpSession session) throws JsonProcessingException {
+        log.info("session id: {}", session.getId());
+        
+        String sessionState = (String) session.getAttribute("oauth2_state");
+        session.removeAttribute("oauth2_state"); 
+
+        if (sessionState == null || !sessionState.equals(state)) {
+            return ResponseEntity.status(400).body("Invalid state parameter. Possible CSRF attack.");
+        }
+
         String jsonToken = this.authService.getTokenFromCode(code);
         if (jsonToken == null) {
             throw new IllegalArgumentException("Não foi possível obter o token de acesso.");
